@@ -223,7 +223,7 @@ def make_collate(tokenizer, block_size, lazy=False):
 
 
 def load_and_cache_examples(args, tokenizer, evaluate=False):
-    file_path = os.path.join(args.data_dir, 'eval' if evaluate else 'train')
+    file_path = os.path.join(args.data_dir, args.eval_data_file if evaluate else args.train_data_file)
     if args.lazy_loading:
         return LazyLineByLineTextDataset(file_path)
     if args.line_by_line:
@@ -567,9 +567,9 @@ def main():
     parser.add_argument('--data-dir', type=str, default=os.environ['SM_CHANNEL_TRAINING'])
 
     # Required parameters
-    #parser.add_argument(
-    #    "--train_data_file", default=None, type=str, required=True, help="The input training data file (a text file)."
-    #)
+    parser.add_argument(
+        "--train_data_file", default=None, type=str, required=True, help="The input training data file (a text file)."
+    )
     #parser.add_argument(
     #    "--output_dir",
     #    type=str,
@@ -581,12 +581,12 @@ def main():
     )
 
     # Other parameters
-    #parser.add_argument(
-    #    "--eval_data_file",
-    #    default=None,
-    #    type=str,
-    #    help="An optional input evaluation data file to evaluate the perplexity on (a text file).",
-    #)
+    parser.add_argument(
+        "--eval_data_file",
+        default=None,
+        type=str,
+        help="An optional input evaluation data file to evaluate the perplexity on (a text file).",
+    )
     parser.add_argument(
         "--line_by_line",
         type=bool,
