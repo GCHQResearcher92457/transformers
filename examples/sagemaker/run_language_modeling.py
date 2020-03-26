@@ -246,7 +246,7 @@ def set_seed(args):
 def _sorted_checkpoints(args, checkpoint_prefix="checkpoint", use_mtime=False) -> List[str]:
     ordering_and_checkpoint_path = []
 
-    glob_checkpoints = glob.glob(os.path.join(args.output_data_dir, "{}-*".format(checkpoint_prefix)))
+    glob_checkpoints = glob.glob(os.path.join(args.model_dir, "{}-*".format(checkpoint_prefix)))
 
     for path in glob_checkpoints:
         if use_mtime:
@@ -471,7 +471,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
                 if args.local_rank in [-1, 0] and args.save_steps > 0 and global_step % args.save_steps == 0:
                     checkpoint_prefix = "checkpoint"
                     # Save model checkpoint
-                    output_dir = os.path.join(args.output_data_dir, "{}-{}".format(checkpoint_prefix, global_step))
+                    output_dir = os.path.join(args.model_dir, "{}-{}".format(checkpoint_prefix, global_step))
                     os.makedirs(output_dir, exist_ok=True)
                     model_to_save = (
                         model.module if hasattr(model, "module") else model
@@ -875,32 +875,32 @@ def main():
     if args.do_train and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
         # Create output directory if needed
         if args.local_rank in [-1, 0]:
-            os.makedirs(args.output_data_dir, exist_ok=True)
+            os.makedirs(args.model_dir, exist_ok=True)
 
-        logger.info("Saving model checkpoint to %s", args.output_data_dir)
+        logger.info("Saving model checkpoint to %s", args.model_dir)
         # Save a trained model, configuration and tokenizer using `save_pretrained()`.
         # They can then be reloaded using `from_pretrained()`
         model_to_save = (
             model.module if hasattr(model, "module") else model
         )  # Take care of distributed/parallel training
-        model_to_save.save_pretrained(args.output_data_dir)
-        tokenizer.save_pretrained(args.output_data_dir)
+        model_to_save.save_pretrained(args.model_dir)
+        tokenizer.save_pretrained(args.model_dir)
 
         # Good practice: save your training arguments together with the trained model
-        torch.save(args, os.path.join(args.output_data_dir, "training_args.bin"))
+        torch.save(args, os.path.join(args.model_dir, "training_args.bin"))
 
         # Load a trained model and vocabulary that you have fine-tuned
-        model = model_class.from_pretrained(args.output_data_dir)
-        tokenizer = tokenizer_class.from_pretrained(args.output_data_dir)
+        model = model_class.from_pretrained(args.model_dir)
+        tokenizer = tokenizer_class.from_pretrained(args.model_dir)
         model.to(args.device)
 
     # Evaluation
     results = {}
     if args.do_eval and args.local_rank in [-1, 0]:
-        checkpoints = [args.output_data_dir]
+        checkpoints = [args.model_dir]
         if args.eval_all_checkpoints:
             checkpoints = list(
-                os.path.dirname(c) for c in sorted(glob.glob(args.output_data_dir + "/**/" + WEIGHTS_NAME, recursive=True))
+                os.path.dirname(c) for c in sorted(glob.glob(args.model_dir + "/**/" + WEIGHTS_NAME, recursive=True))
             )
             logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
         logger.info("Evaluate the following checkpoints: %s", checkpoints)
@@ -917,8 +917,7 @@ def main():
     model_path = os.path.join(args.model_dir, 'model.pth')
     model_info_path = os.path.join(args.model_dir, 'model_info.pth')
     # Move the best model to cpu and resave it
-    with open(model_path, 'wb') as f:
-        torch.save(model.cpu().state_dict(), f)
+
 
     return results
 
