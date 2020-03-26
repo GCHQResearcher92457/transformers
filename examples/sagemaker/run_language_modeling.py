@@ -199,7 +199,10 @@ def make_collate(tokenizer, block_size, lazy=False):
         examples = tokenizer.batch_encode_plus(examples, max_len=block_size)
         # Seems that the above tokenisation statement doesn't correctly truncate leading to sequence-too-long errors in
         # training.
-        examples = [torch.tensor(ex[:block_size]) for ex in examples["input_ids"]]
+        try:
+            examples = [torch.tensor(ex[:block_size]) for ex in examples["input_ids"]]
+        except KeyError:
+            return None
         if tokenizer._pad_token is None:
             return pad_sequence(examples, batch_first=True)
         return pad_sequence(examples, batch_first=True, padding_value=tokenizer.pad_token_id)
@@ -417,7 +420,8 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
     for _ in train_iterator:
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0])
         for step, batch in enumerate(epoch_iterator):
-
+            if batch is None:
+                continue
             # Skip past any already trained steps if resuming training
             if steps_trained_in_current_epoch > 0:
                 steps_trained_in_current_epoch -= 1
@@ -529,6 +533,8 @@ def evaluate(args, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prefi
     model.eval()
 
     for batch in tqdm(eval_dataloader, desc="Evaluating"):
+        if batch is None:
+            continue
         inputs, labels = mask_tokens(batch, tokenizer, args) if args.mlm else (batch, batch)
         inputs = inputs.to(args.device)
         labels = labels.to(args.device)
