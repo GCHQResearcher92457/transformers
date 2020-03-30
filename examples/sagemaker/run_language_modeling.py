@@ -227,7 +227,7 @@ def make_collate(tokenizer, block_size, lazy=False):
 
 def load_and_cache_examples(args, tokenizer, evaluate=False):
     file_path = os.path.join(args.data_dir, args.eval_data_file if evaluate else args.train_data_file)
-    if args.lazy_loading:
+    if args.lazy_loading or True:
         return LazyLineByLineTextDataset(file_path)
     if args.line_by_line:
         return LineByLineTextDataset(tokenizer, args, file_path=file_path, block_size=args.block_size)
