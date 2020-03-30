@@ -106,16 +106,6 @@ def to_list(tensor):
 
 
 def train(args, train_dataset, model, tokenizer):
-    if args.model_name_or_path[:5] == 's3://' and args.model_name_or_path[-7:] == '.tar.gz':
-        s3 = boto3.client('s3')
-        sloc = args.model_name_or_path[5:].split('/')
-        bucket = sloc[0]
-        path = '/'.join(sloc[1:])
-        os.makedirs('cached_models', exist_ok=True)
-        s3.download_file(bucket, path, 'cached_models/cached_model.tar.gz')
-        tf = tarfile.open('cached_models/cached_model.tar.gz')
-        tf.extractall(path='cached_models')
-        args.model_name_or_path = 'cached_models'
     """ Train the model """
     if args.local_rank in [-1, 0]:
         tb_writer = SummaryWriter()
@@ -704,7 +694,8 @@ def main():
     parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for distributed training on gpus")
     parser.add_argument(
         "--fp16",
-        action="store_true",
+        type=bool,
+        default=False,
         help="Whether to use 16-bit (mixed) precision (through NVIDIA apex) instead of 32-bit",
     )
     parser.add_argument(
@@ -719,6 +710,18 @@ def main():
 
     parser.add_argument("--threads", type=int, default=1, help="multiple threads for converting example to features")
     args = parser.parse_args()
+
+    if args.model_name_or_path[:5] == 's3://' and args.model_name_or_path[-7:] == '.tar.gz':
+        s3 = boto3.client('s3')
+        sloc = args.model_name_or_path[5:].split('/')
+        bucket = sloc[0]
+        path = '/'.join(sloc[1:])
+        os.makedirs('cached_models', exist_ok=True)
+        s3.download_file(bucket, path, 'cached_models/cached_model.tar.gz')
+        tf = tarfile.open('cached_models/cached_model.tar.gz')
+        tf.extractall(path='cached_models')
+        args.model_name_or_path = 'cached_models'
+
 
     if args.doc_stride >= args.max_seq_length - args.max_query_length:
         logger.warning(
