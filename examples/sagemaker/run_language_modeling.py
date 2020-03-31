@@ -39,6 +39,11 @@ from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampl
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
 
+import subprocess
+import sys
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'tokenizers>=0.6.0'])
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'transformers'])
+
 from transformers import (
     WEIGHTS_NAME,
     AdamW,
