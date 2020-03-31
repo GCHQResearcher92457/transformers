@@ -42,7 +42,7 @@ from tqdm import tqdm, trange
 import subprocess
 import sys
 subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'tokenizers>=0.6.0'])
-subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'transformers==2.6.0'])
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'transformers'])
 subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'tensorboard'])
 
 
